@@ -388,7 +388,7 @@ To do so, we will essentially use CRLF injection in order to add a command to th
 The mail address argument payload which generates a script which works for our purposes ends up being:
 
 ```bash
-python check-mail.py --ip 127.0.0.1 --mail $'root@localhost"    \nos.execute("/bin/sh")"'`.
+python check-mail.py --ip $IP --mail $'root@localhost"    \nos.execute("/bin/sh")"'`.
 ```
 
 One caveat is that the script will only run if it detects that the host has the SMTP port (25) open. At first glance, the regex check seems to eliminate any possibility of using our attacker box as the target to be scanned because our IP does not match the regex (172.16.120.68). However, we can simply pad the IP with zeroes wherever necessary and nmap will process the IP the same way: `172.016.120.068`.
