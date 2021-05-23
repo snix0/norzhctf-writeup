@@ -35,7 +35,7 @@ kali@kali:~/CTF/norzh$ python2 46501.py -t 10.47.1.7 -p 18001
 [-] Exploit failed
 ```
 
-The exploit failed but it does seem that we are able to communicate with the service successfully. The output indicates that the default "break-on" function, `java.net.ServerSocket.accept`, is not being used or called by whatever application is running on the JVM. This is most likely causing the exploit to fail because the it depends on a breakpoint that we set to be triggered in order for the exploit to succeed.
+The exploit failed but it does seem that we are able to communicate with the service successfully. The output indicates that the default "break-on" function, `java.net.ServerSocket.accept`, is not being used or called by whatever application is running on the JVM. This is most likely causing the exploit to fail because it depends on a breakpoint that we set to be triggered in order for the exploit to succeed.
 
 In order to find a function that would be more likely to work, we can try to connect directly with the JDWP service.
 There is a paper available at https://www.exploit-db.com/papers/27179 written by prdelka which explains how to leak useful information and determining a likely candidates for the "break-on" function which can be used for the breakpoint during exploitation.
@@ -385,7 +385,11 @@ The script accepts an IP address via `--ip` and a mail address which will be use
 Since the mail address is being injected into the generated temporary file via Python `str.format`, we can leverage this to inject additional code to be run in the NSE script.
 
 To do so, we will essentially use CRLF injection in order to add a command to the script which will run `/bin/sh`, granting us a shell as `root`.
-The mail address argument payload which generates a script which works for our purposes ends up being `python check-mail.py --ip 127.0.0.1 --mail $'root@localhost"    \nos.execute("/bin/sh")"'`.
+The mail address argument payload which generates a script which works for our purposes ends up being:
+
+```bash
+python check-mail.py --ip 127.0.0.1 --mail $'root@localhost"    \nos.execute("/bin/sh")"'`.
+```
 
 One caveat is that the script will only run if it detects that the host has the SMTP port (25) open. At first glance, the regex check seems to eliminate any possibility of using our attacker box as the target to be scanned because our IP does not match the regex (172.16.120.68). However, we can simply pad the IP with zeroes wherever necessary and nmap will process the IP the same way: `172.016.120.068`.
 Note: Technically, you could also use any public IP which has that port open and matches the regex, which is how I initially solved it (using shodan.io).
